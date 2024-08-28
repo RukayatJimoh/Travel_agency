@@ -74,9 +74,71 @@ FROM public.travels
 WHERE united_nation_members = 'True'
 
 --Least 2 countries with the lowest population for each continents
-SELECT country_name,continents, population
+SELECT country_name,continents, population,rn
+FROM (
+SELECT country_name, continents, population,
+ROW_NUMBER() OVER (PARTITION BY continents ORDER BY population ASC) as rn
+FROM public.travels) as subquery
+WHERE rn <= 2
+order by continents, population
+
+ --Top 2 countries with the largest Area for each continent
+SELECT continents,country_name, areas,rnk
+FROM
+	( 
+	SELECT country_name, areas,continents, 
+	ROW_NUMBER() OVER (PARTITION BY continents ORDER BY areas DESC) as rnk
+	FROM public.travels
+) as subquery
+WHERE rnk <= 2
+
+--Top 5 countries with the largest Area
+SELECT country_name, areas
 FROM public.travels
-RANK()OVER (PARTITION BY population ORDER BY country_name)
+ORDER BY  areas DESC
+LIMIT 5
 
---
+--Top 5 countries with the lowest Area
+SELECT country_name, areas
+FROM public.travels
+ORDER BY  areas ASC
+LIMIT 5
 
+--Average Population and Area by Continent
+SELECT continents, round(AVG(population),2) As Avg_population, round(AVG(areas),2) as Avg_areas
+FROM public.travels
+GROUP BY continents
+ORDER BY Avg_population, Avg_areas DESC
+
+--Number of Countries by Region
+SELECT region, COUNT (country_name) AS countries_by_region
+FROM public.travels
+GROUP BY region
+
+--Number of Countries by continent
+SELECT continents, COUNT (country_name) AS countries_continent
+FROM public.travels
+GROUP BY continents
+
+--Number of Countries by Currency
+SELECT currency_code, COUNT(country_name)
+FROM public.travels
+GROUP BY currency_code
+
+--Number of Countries by Language
+SELECT languages, COUNT(country_name)
+FROM public.travels
+GROUP BY languages
+
+--Top 10 Densest Countries
+SELECT country_name, population
+FROM public.travels
+ORDER BY population DESC
+LIMIT 10
+
+--Number of Languages by Continent
+SELECT continents,COUNT(languages) AS language_by_continents
+FROM public.travels
+GROUP BY continents
+ORDER BY language_by_continents DESC
+ 
